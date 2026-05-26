@@ -1,0 +1,30 @@
+[
+  {
+    "id": "1",
+    "name": "Air Jordan 1 Retro High OG",
+    "style": "Flight Club",
+    "price": 1899.99,
+    "description": "O lendário Air Jordan 1 Retro High OG em colorway Flight Club. Couro premium em preto com detalhes em vermelho e solado gum, reedição fiel ao original de 1985. Um ícone atemporal da cultura sneaker.",
+    "sku": "DZ5485-016",
+    "status": "disponivel",
+    "images": [
+      "/images/aj1-init.png",
+      "/images/aj1-flight-club-1.png",
+      "/images/aj1-flight-club-2.png"
+    ]
+  },
+    {
+    "id": "2",
+    "name": "nike-air-force-1-07",
+    "style": "Flight Club",
+    "price": 799.99,
+    "description": "O Air Force 1 combina um estilo clássico ao material premium, oferecendo um visual elegante e simples..",
+    "sku": "DW5485-087",
+    "status": "disponivel",
+    "images": [
+      "/images/af1-init.png",
+      "/images/nike-air-force-1-07-1.png",
+      "/images/nike-air-force-1-07-2.png"
+    ]
+  }
+]

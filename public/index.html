@@ -1,0 +1,1029 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SNKRS — SneakerSale</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --neon: #00ffc8;
+      --neon-dim: rgba(0, 255, 200, 0.12);
+      --bg: #07080d;
+      --bg-card: #0d0f17;
+      --bg-card-hover: #111320;
+      --red-neon: #ff5050;
+      --text: #ffffff;
+      --text-muted: rgba(255,255,255,0.45);
+      --text-dim: rgba(255,255,255,0.25);
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Space Mono', monospace;
+      min-height: 100vh;
+    }
+
+    #bgCanvas {
+      position: fixed;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* ── Header ── */
+    header {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 18px 40px;
+      border-bottom: 1px solid var(--neon-dim);
+      background: rgba(7, 8, 13, 0.88);
+      backdrop-filter: blur(10px);
+    }
+
+    .logo {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 30px;
+      letter-spacing: 5px;
+      color: var(--text);
+      cursor: pointer;
+      text-shadow: 0 0 14px rgba(0,255,200,0.55), 0 0 32px rgba(0,255,200,0.2);
+    }
+    .logo span { color: var(--neon); }
+
+    /* Cart icon */
+    .cart-btn {
+      position: relative;
+      background: none;
+      border: 1px solid rgba(0,255,200,0.25);
+      color: var(--text-muted);
+      font-size: 20px;
+      width: 42px;
+      height: 42px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: color 0.2s, border-color 0.2s, box-shadow 0.2s;
+    }
+    .cart-btn:hover {
+      color: var(--neon);
+      border-color: rgba(0,255,200,0.5);
+      box-shadow: 0 0 14px rgba(0,255,200,0.2);
+    }
+    .cart-count {
+      position: absolute;
+      top: -6px;
+      right: -6px;
+      background: var(--neon);
+      color: #07080d;
+      font-family: 'Space Mono', monospace;
+      font-size: 9px;
+      font-weight: 700;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      display: none;
+    }
+    .cart-count.visible { display: flex; }
+
+    /* ── Grid (vitrine) ── */
+    main {
+      position: relative;
+      z-index: 10;
+      padding: 2px;
+    }
+
+    #productGrid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 2px;
+    }
+
+    .card {
+      position: relative;
+      background: var(--bg-card);
+      overflow: hidden;
+      transition: transform 0.3s cubic-bezier(.22,.68,0,1.2);
+    }
+    .card:hover { transform: scale(1.025); z-index: 2; }
+    .card:hover .card-glow { opacity: 1; }
+    .card:hover .card-img { filter: brightness(1.1) drop-shadow(0 10px 24px rgba(0,0,0,0.8)); }
+
+    .card-glow {
+      position: absolute;
+      inset: 0;
+      opacity: 0;
+      pointer-events: none;
+      z-index: 1;
+      border: 1px solid rgba(0,255,200,0.35);
+      box-shadow: inset 0 0 36px rgba(0,255,200,0.07);
+      transition: opacity 0.35s;
+    }
+
+    .card-img-wrap {
+      aspect-ratio: 4 / 3;
+      background: #111320;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+    }
+
+    .card-img {
+      width: 78%;
+      height: 78%;
+      object-fit: contain;
+      filter: drop-shadow(0 8px 20px rgba(0,0,0,0.7));
+      transition: filter 0.3s;
+    }
+
+    .badge {
+      position: absolute;
+      font-size: 8px;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      padding: 4px 9px;
+      font-family: 'Space Mono', monospace;
+      z-index: 3;
+    }
+    .badge-new {
+      top: 12px; left: 12px;
+      background: rgba(0,255,200,0.1);
+      border: 1px solid rgba(0,255,200,0.4);
+      color: var(--neon);
+      text-shadow: 0 0 6px rgba(0,255,200,0.7);
+    }
+    .badge-sold {
+      top: 12px; right: 12px;
+      background: rgba(255,50,50,0.12);
+      border: 1px solid rgba(255,80,80,0.45);
+      color: var(--red-neon);
+      text-shadow: 0 0 6px rgba(255,80,80,0.6);
+    }
+
+    .card-body { padding: 14px 18px 18px; }
+    .card-type {
+      font-size: 9px;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--text-dim);
+      margin-bottom: 4px;
+    }
+    .card-name {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 22px;
+      letter-spacing: 1.5px;
+      line-height: 1.1;
+      color: var(--text);
+      margin-bottom: 3px;
+    }
+    .card-style {
+      font-size: 10px;
+      letter-spacing: 1px;
+      color: var(--text-muted);
+      margin-bottom: 12px;
+    }
+    .card-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .card-price {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--neon);
+      text-shadow: 0 0 8px rgba(0,255,200,0.4);
+      letter-spacing: 1px;
+    }
+    .card-price.sold { color: var(--text-dim); text-shadow: none; }
+
+    .btn-ver {
+      font-size: 8px;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      border: 1px solid rgba(0,255,200,0.35);
+      background: transparent;
+      color: var(--neon);
+      padding: 6px 12px;
+      cursor: pointer;
+      font-family: 'Space Mono', monospace;
+      transition: background 0.2s, box-shadow 0.2s;
+    }
+    .btn-ver:hover {
+      background: rgba(0,255,200,0.1);
+      box-shadow: 0 0 14px rgba(0,255,200,0.25);
+    }
+    .btn-ver:disabled {
+      border-color: rgba(255,255,255,0.1);
+      color: var(--text-dim);
+      cursor: not-allowed;
+    }
+    .btn-ver:disabled:hover { background: transparent; box-shadow: none; }
+
+    /* ── Loading ── */
+    #loading {
+      position: relative;
+      z-index: 10;
+      padding: 80px;
+      text-align: center;
+      font-size: 11px;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      color: var(--neon);
+      text-shadow: 0 0 10px rgba(0,255,200,0.5);
+    }
+
+    /* ── Footer ── */
+    footer {
+      position: relative;
+      z-index: 10;
+      padding: 12px 40px;
+      border-top: 1px solid rgba(0,255,200,0.08);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .dot {
+      width: 7px; height: 7px;
+      border-radius: 50%;
+      background: var(--neon);
+      box-shadow: 0 0 8px var(--neon);
+      animation: pulse 2s infinite;
+    }
+    @keyframes pulse { 0%,100%{opacity:1}50%{opacity:0.25} }
+    .footer-txt {
+      font-size: 9px;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--text-dim);
+    }
+    .footer-txt em { color: rgba(0,255,200,0.55); font-style: normal; }
+
+    /* ── Página de Detalhe do Produto ── */
+    #detailPage {
+      display: none;
+      position: fixed;
+      inset: 0;
+      z-index: 150;
+      background: var(--bg);
+      overflow-y: auto;
+      animation: slideIn 0.35s cubic-bezier(.22,.68,0,1.2);
+    }
+    #detailPage.open { display: block; }
+
+    @keyframes slideIn {
+      from { opacity: 0; transform: translateY(32px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .detail-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 18px 40px;
+      border-bottom: 1px solid var(--neon-dim);
+      background: rgba(7, 8, 13, 0.95);
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+
+    .btn-back {
+      background: none;
+      border: 1px solid rgba(255,255,255,0.15);
+      color: var(--text-muted);
+      font-family: 'Space Mono', monospace;
+      font-size: 9px;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      padding: 8px 14px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .btn-back:hover {
+      border-color: var(--neon);
+      color: var(--neon);
+      box-shadow: 0 0 10px rgba(0,255,200,0.2);
+    }
+
+    .detail-content {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0;
+      min-height: calc(100vh - 80px);
+    }
+
+    .detail-gallery {
+      background: #0a0c14;
+      border-right: 1px solid var(--neon-dim);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 60px 40px;
+      gap: 16px;
+    }
+
+    .detail-main-img {
+      width: 100%;
+      max-width: 420px;
+      aspect-ratio: 4/3;
+      object-fit: contain;
+      filter: drop-shadow(0 16px 48px rgba(0,255,200,0.12));
+      transition: filter 0.3s;
+    }
+
+    .detail-thumbs {
+      display: flex;
+      gap: 10px;
+    }
+    .detail-thumb {
+      width: 64px;
+      height: 48px;
+      object-fit: contain;
+      border: 1px solid rgba(255,255,255,0.1);
+      padding: 4px;
+      cursor: pointer;
+      transition: border-color 0.2s;
+      background: #111320;
+    }
+    .detail-thumb:hover, .detail-thumb.active {
+      border-color: var(--neon);
+      box-shadow: 0 0 8px rgba(0,255,200,0.3);
+    }
+
+    .detail-info {
+      padding: 60px 48px;
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+    }
+
+    .detail-brand {
+      font-size: 9px;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      color: var(--text-dim);
+      margin-bottom: 10px;
+    }
+
+    .detail-name {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 52px;
+      letter-spacing: 2px;
+      line-height: 1;
+      color: var(--text);
+      margin-bottom: 6px;
+    }
+
+    .detail-style {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-bottom: 24px;
+      letter-spacing: 1px;
+    }
+
+    .detail-price {
+      font-size: 28px;
+      font-weight: 700;
+      color: var(--neon);
+      text-shadow: 0 0 12px rgba(0,255,200,0.4);
+      letter-spacing: 1px;
+      margin-bottom: 28px;
+    }
+
+    .detail-desc {
+      font-size: 12px;
+      line-height: 1.85;
+      color: rgba(255,255,255,0.55);
+      margin-bottom: 32px;
+      border-left: 2px solid var(--neon-dim);
+      padding-left: 14px;
+    }
+
+    .size-label {
+      font-size: 9px;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      color: var(--text-dim);
+      margin-bottom: 12px;
+    }
+
+    .sizes-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 32px;
+    }
+
+    .size-btn {
+      width: 52px;
+      height: 40px;
+      background: transparent;
+      border: 1px solid rgba(255,255,255,0.15);
+      color: var(--text-muted);
+      font-family: 'Space Mono', monospace;
+      font-size: 11px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .size-btn:hover {
+      border-color: rgba(0,255,200,0.45);
+      color: var(--text);
+    }
+    .size-btn.selected {
+      border-color: var(--neon);
+      background: rgba(0,255,200,0.1);
+      color: var(--neon);
+      text-shadow: 0 0 8px rgba(0,255,200,0.5);
+    }
+
+    .btn-add-cart {
+      width: 100%;
+      padding: 16px;
+      background: var(--neon);
+      border: none;
+      color: #07080d;
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 20px;
+      letter-spacing: 3px;
+      cursor: pointer;
+      transition: box-shadow 0.2s, transform 0.1s;
+      margin-bottom: 8px;
+    }
+    .btn-add-cart:hover {
+      box-shadow: 0 0 32px rgba(0,255,200,0.45);
+      transform: translateY(-1px);
+    }
+    .btn-add-cart:active { transform: translateY(0); }
+    .btn-add-cart:disabled {
+      background: rgba(255,255,255,0.1);
+      color: var(--text-dim);
+      cursor: not-allowed;
+      box-shadow: none;
+      transform: none;
+    }
+
+    .size-warning {
+      font-size: 9px;
+      letter-spacing: 2px;
+      color: var(--red-neon);
+      text-align: center;
+      min-height: 16px;
+      text-transform: uppercase;
+      display: none;
+    }
+    .size-warning.show { display: block; }
+
+    .detail-sku {
+      font-size: 9px;
+      color: var(--text-dim);
+      letter-spacing: 1px;
+      margin-top: 20px;
+    }
+
+    /* ── Carrinho (drawer lateral) ── */
+    #cartDrawer {
+      position: fixed;
+      top: 0;
+      right: -480px;
+      width: 440px;
+      height: 100vh;
+      background: #0a0c14;
+      border-left: 1px solid rgba(0,255,200,0.2);
+      z-index: 300;
+      display: flex;
+      flex-direction: column;
+      transition: right 0.38s cubic-bezier(.22,.68,0,1.2);
+      box-shadow: -20px 0 60px rgba(0,0,0,0.6);
+    }
+    #cartDrawer.open { right: 0; }
+
+    #cartOverlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.6);
+      backdrop-filter: blur(3px);
+      z-index: 299;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s;
+    }
+    #cartOverlay.open { opacity: 1; pointer-events: all; }
+
+    .cart-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 22px 28px;
+      border-bottom: 1px solid rgba(0,255,200,0.1);
+    }
+    .cart-title {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 24px;
+      letter-spacing: 3px;
+      color: var(--text);
+    }
+    .cart-close {
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      font-size: 22px;
+      cursor: pointer;
+      line-height: 1;
+      transition: color 0.2s;
+    }
+    .cart-close:hover { color: var(--neon); }
+
+    .cart-items {
+      flex: 1;
+      overflow-y: auto;
+      padding: 16px 28px;
+    }
+    .cart-items::-webkit-scrollbar { width: 3px; }
+    .cart-items::-webkit-scrollbar-track { background: transparent; }
+    .cart-items::-webkit-scrollbar-thumb { background: rgba(0,255,200,0.25); }
+
+    .cart-empty {
+      text-align: center;
+      padding: 60px 0;
+      font-size: 10px;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--text-dim);
+    }
+
+    .cart-item {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 14px 0;
+      border-bottom: 1px solid rgba(255,255,255,0.05);
+      animation: fadeSlide 0.25s ease;
+    }
+    @keyframes fadeSlide {
+      from { opacity: 0; transform: translateX(16px); }
+      to   { opacity: 1; transform: translateX(0); }
+    }
+
+    .cart-item-img {
+      width: 64px;
+      height: 48px;
+      object-fit: contain;
+      background: #111320;
+      border: 1px solid rgba(255,255,255,0.07);
+      flex-shrink: 0;
+    }
+
+    .cart-item-info { flex: 1; min-width: 0; }
+    .cart-item-name {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 16px;
+      letter-spacing: 1px;
+      color: var(--text);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .cart-item-sub {
+      font-size: 9px;
+      color: var(--text-dim);
+      letter-spacing: 1px;
+      margin-top: 2px;
+    }
+    .cart-item-price {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--neon);
+      letter-spacing: 1px;
+      flex-shrink: 0;
+    }
+    .cart-item-remove {
+      background: none;
+      border: none;
+      color: rgba(255,80,80,0.4);
+      font-size: 16px;
+      cursor: pointer;
+      padding: 4px;
+      transition: color 0.2s;
+      flex-shrink: 0;
+    }
+    .cart-item-remove:hover { color: var(--red-neon); }
+
+    .cart-footer {
+      padding: 20px 28px;
+      border-top: 1px solid rgba(0,255,200,0.1);
+    }
+    .cart-total-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 18px;
+    }
+    .cart-total-label {
+      font-size: 10px;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      color: var(--text-muted);
+    }
+    .cart-total-value {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 28px;
+      color: var(--neon);
+      text-shadow: 0 0 14px rgba(0,255,200,0.4);
+      letter-spacing: 2px;
+    }
+    .btn-checkout {
+      width: 100%;
+      padding: 16px;
+      background: var(--neon);
+      border: none;
+      color: #07080d;
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 20px;
+      letter-spacing: 3px;
+      cursor: pointer;
+      transition: box-shadow 0.2s, transform 0.1s;
+    }
+    .btn-checkout:hover {
+      box-shadow: 0 0 32px rgba(0,255,200,0.45);
+      transform: translateY(-1px);
+    }
+    .btn-checkout:active { transform: translateY(0); }
+  </style>
+</head>
+<body>
+
+<canvas id="bgCanvas"></canvas>
+
+<!-- ── VITRINE ── -->
+<header id="mainHeader">
+  <div class="logo" id="logoHome">SNK<span>RS</span></div>
+  <button class="cart-btn" id="cartToggle" title="Ver carrinho">
+    🛒
+    <span class="cart-count" id="cartCount">0</span>
+  </button>
+</header>
+
+<main id="vitrine">
+  <div id="loading">Carregando produtos...</div>
+  <div id="productGrid"></div>
+</main>
+
+<footer>
+  <div class="dot"></div>
+  <div class="footer-txt">API local ativa — <em>GET /products</em> — <em id="count">0</em> produtos</div>
+</footer>
+
+<!-- ── PÁGINA DE DETALHE ── -->
+<div id="detailPage">
+  <div class="detail-header">
+    <button class="btn-back" id="btnBack">← Voltar</button>
+    <div class="logo">SNK<span>RS</span></div>
+    <button class="cart-btn" id="cartToggleDetail" title="Ver carrinho">
+      🛒
+      <span class="cart-count" id="cartCountDetail">0</span>
+    </button>
+  </div>
+
+  <div class="detail-content">
+    <div class="detail-gallery">
+      <img id="dMainImg" class="detail-main-img" src="" alt="" />
+      <div class="detail-thumbs" id="dThumbs"></div>
+    </div>
+
+    <div class="detail-info">
+      <div class="detail-brand" id="dBrand"></div>
+      <div class="detail-name" id="dName"></div>
+      <div class="detail-style" id="dStyle"></div>
+      <div class="detail-price" id="dPrice"></div>
+      <div class="detail-desc" id="dDesc"></div>
+
+      <div class="size-label">Selecione o tamanho (BR)</div>
+      <div class="sizes-grid" id="sizesGrid"></div>
+
+      <button class="btn-add-cart" id="btnAddCart">Adicionar ao Carrinho</button>
+      <div class="size-warning" id="sizeWarning">Selecione um tamanho antes de continuar</div>
+
+      <div class="detail-sku" id="dSku"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ── CARRINHO DRAWER ── -->
+<div id="cartOverlay"></div>
+<div id="cartDrawer">
+  <div class="cart-header">
+    <div class="cart-title">Carrinho</div>
+    <button class="cart-close" id="cartClose">✕</button>
+  </div>
+  <div class="cart-items" id="cartItems"></div>
+  <div class="cart-footer" id="cartFooter" style="display:none">
+    <div class="cart-total-row">
+      <div class="cart-total-label">Total</div>
+      <div class="cart-total-value" id="cartTotal"></div>
+    </div>
+    <button class="btn-checkout" id="btnCheckout">Finalizar Compra</button>
+  </div>
+</div>
+
+<script>
+  // ── BG Canvas ──────────────────────────────────────────────
+  const canvas = document.getElementById('bgCanvas');
+  const ctx = canvas.getContext('2d');
+  function resize() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
+  resize();
+  window.addEventListener('resize', resize);
+
+  const particles = Array.from({ length: 30 }, () => ({
+    x: Math.random() * 100, y: 60 + Math.random() * 40,
+    r: 70 + Math.random() * 130,
+    speed: 0.006 + Math.random() * 0.01,
+    alpha: 0.02 + Math.random() * 0.04,
+    phase: Math.random() * Math.PI * 2,
+  }));
+  let frame = 0;
+  function drawBg() {
+    const w = canvas.width, h = canvas.height;
+    ctx.clearRect(0, 0, w, h);
+    ctx.strokeStyle = 'rgba(0,255,200,0.04)'; ctx.lineWidth = 0.5;
+    for (let x = 0; x < w; x += 64) { ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, h); ctx.stroke(); }
+    for (let y = 0; y < h; y += 64) { ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(w, y); ctx.stroke(); }
+    particles.forEach(p => {
+      p.y -= p.speed; p.x += Math.sin(frame * 0.01 + p.phase) * 0.06;
+      if (p.y < -p.r / h * 100) { p.y = 108; p.x = Math.random() * 100; }
+      const gx = (p.x / 100) * w, gy = (p.y / 100) * h;
+      const g = ctx.createRadialGradient(gx, gy, 0, gx, gy, p.r);
+      g.addColorStop(0, `rgba(0,255,200,${p.alpha})`);
+      g.addColorStop(0.5, `rgba(0,180,140,${p.alpha * 0.35})`);
+      g.addColorStop(1, 'rgba(0,255,200,0)');
+      ctx.fillStyle = g;
+      ctx.beginPath(); ctx.ellipse(gx, gy, p.r, p.r * 0.38, 0, 0, Math.PI * 2); ctx.fill();
+    });
+    const floor = ctx.createLinearGradient(0, h * 0.75, 0, h);
+    floor.addColorStop(0, 'rgba(0,255,200,0)'); floor.addColorStop(1, 'rgba(0,255,200,0.07)');
+    ctx.fillStyle = floor; ctx.fillRect(0, h * 0.75, w, h * 0.25);
+    frame++; requestAnimationFrame(drawBg);
+  }
+  drawBg();
+
+  // ── Estado ─────────────────────────────────────────────────
+  const SIZES = [37, 38, 39, 40, 41, 42, 43, 44, 45, 46];
+  let cart = JSON.parse(localStorage.getItem('snkrs_cart') || '[]');
+  let currentProduct = null;
+  let selectedSize = null;
+
+  function saveCart() { localStorage.setItem('snkrs_cart', JSON.stringify(cart)); }
+  function formatPrice(price) { return price.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }); }
+
+  // ── Contador do carrinho ───────────────────────────────────
+  function updateCartBadge() {
+    const total = cart.length;
+    ['cartCount', 'cartCountDetail'].forEach(id => {
+      const el = document.getElementById(id);
+      el.textContent = total;
+      el.classList.toggle('visible', total > 0);
+    });
+  }
+
+  // ── Carrinho: renderizar ───────────────────────────────────
+  function renderCart() {
+    const container = document.getElementById('cartItems');
+    const footer = document.getElementById('cartFooter');
+    const totalEl = document.getElementById('cartTotal');
+
+    if (cart.length === 0) {
+      container.innerHTML = '<div class="cart-empty">Seu carrinho está vazio</div>';
+      footer.style.display = 'none';
+      return;
+    }
+
+    footer.style.display = 'block';
+    container.innerHTML = '';
+
+    let total = 0;
+    cart.forEach((item, index) => {
+      total += item.price;
+      const div = document.createElement('div');
+      div.className = 'cart-item';
+      div.innerHTML = `
+        ${item.img ? `<img class="cart-item-img" src="${item.img}" alt="${item.name}" />` : '<div class="cart-item-img"></div>'}
+        <div class="cart-item-info">
+          <div class="cart-item-name">${item.name}</div>
+          <div class="cart-item-sub">${item.style} — TAM ${item.size}</div>
+        </div>
+        <div class="cart-item-price">${formatPrice(item.price)}</div>
+        <button class="cart-item-remove" data-index="${index}" title="Remover">✕</button>
+      `;
+      container.appendChild(div);
+    });
+
+    totalEl.textContent = formatPrice(total);
+
+    container.querySelectorAll('.cart-item-remove').forEach(btn => {
+      btn.addEventListener('click', () => {
+        cart.splice(parseInt(btn.dataset.index), 1);
+        saveCart();
+        updateCartBadge();
+        renderCart();
+      });
+    });
+  }
+
+  // ── Abrir / fechar carrinho ────────────────────────────────
+  function openCart() {
+    renderCart();
+    document.getElementById('cartDrawer').classList.add('open');
+    document.getElementById('cartOverlay').classList.add('open');
+  }
+  function closeCart() {
+    document.getElementById('cartDrawer').classList.remove('open');
+    document.getElementById('cartOverlay').classList.remove('open');
+  }
+
+  document.getElementById('cartToggle').addEventListener('click', openCart);
+  document.getElementById('cartToggleDetail').addEventListener('click', openCart);
+  document.getElementById('cartClose').addEventListener('click', closeCart);
+  document.getElementById('cartOverlay').addEventListener('click', closeCart);
+
+  document.getElementById('btnCheckout').addEventListener('click', () => {
+    alert('✅ Pedido finalizado! Obrigado pela compra.');
+    cart = [];
+    saveCart();
+    updateCartBadge();
+    renderCart();
+    closeCart();
+  });
+
+  // ── Página de detalhe ─────────────────────────────────────
+  function openDetail(product) {
+    currentProduct = product;
+    selectedSize = null;
+
+    const isSold = product.status === 'esgotado';
+
+    document.getElementById('dBrand').textContent = product.name;
+    document.getElementById('dName').textContent = product.style;
+    document.getElementById('dStyle').textContent = product.name;
+    document.getElementById('dDesc').textContent = product.description || 'Sem descrição disponível.';
+    document.getElementById('dPrice').textContent = isSold ? 'Esgotado' : formatPrice(product.price);
+    document.getElementById('dSku').textContent = `SKU: ${product.sku}`;
+
+    // Imagem principal
+    const imgs = product.images || [];
+    const mainImg = document.getElementById('dMainImg');
+    mainImg.src = imgs[0] || '';
+    mainImg.alt = product.name;
+
+    // Thumbnails
+    const thumbsEl = document.getElementById('dThumbs');
+    thumbsEl.innerHTML = '';
+    imgs.forEach((src, i) => {
+      const img = document.createElement('img');
+      img.className = 'detail-thumb' + (i === 0 ? ' active' : '');
+      img.src = src; img.alt = `Imagem ${i + 1}`;
+      img.addEventListener('click', () => {
+        mainImg.src = src;
+        thumbsEl.querySelectorAll('.detail-thumb').forEach(t => t.classList.remove('active'));
+        img.classList.add('active');
+      });
+      thumbsEl.appendChild(img);
+    });
+
+    // Tamanhos
+    const sizesGrid = document.getElementById('sizesGrid');
+    sizesGrid.innerHTML = '';
+    SIZES.forEach(sz => {
+      const btn = document.createElement('button');
+      btn.className = 'size-btn';
+      btn.textContent = sz;
+      btn.disabled = isSold;
+      btn.addEventListener('click', () => {
+        sizesGrid.querySelectorAll('.size-btn').forEach(b => b.classList.remove('selected'));
+        btn.classList.add('selected');
+        selectedSize = sz;
+        document.getElementById('sizeWarning').classList.remove('show');
+      });
+      sizesGrid.appendChild(btn);
+    });
+
+    // Botão adicionar
+    const btnAdd = document.getElementById('btnAddCart');
+    btnAdd.disabled = isSold;
+    btnAdd.textContent = isSold ? 'Produto Esgotado' : 'Adicionar ao Carrinho';
+
+    document.getElementById('sizeWarning').classList.remove('show');
+    document.getElementById('detailPage').classList.add('open');
+    document.getElementById('detailPage').scrollTop = 0;
+  }
+
+  document.getElementById('btnBack').addEventListener('click', () => {
+    document.getElementById('detailPage').classList.remove('open');
+    currentProduct = null;
+    selectedSize = null;
+  });
+  document.getElementById('logoHome').addEventListener('click', () => {
+    document.getElementById('detailPage').classList.remove('open');
+  });
+
+  document.getElementById('btnAddCart').addEventListener('click', () => {
+    if (!selectedSize) {
+      document.getElementById('sizeWarning').classList.add('show');
+      return;
+    }
+    const item = {
+      id: currentProduct.id,
+      name: currentProduct.name,
+      style: currentProduct.style,
+      price: currentProduct.price,
+      size: selectedSize,
+      img: currentProduct.images && currentProduct.images[0] ? currentProduct.images[0] : '',
+    };
+    cart.push(item);
+    saveCart();
+    updateCartBadge();
+
+    // Feedback visual no botão
+    const btn = document.getElementById('btnAddCart');
+    btn.textContent = '✓ Adicionado!';
+    btn.style.background = 'rgba(0,255,200,0.7)';
+    setTimeout(() => {
+      btn.textContent = 'Adicionar ao Carrinho';
+      btn.style.background = '';
+    }, 1800);
+  });
+
+  // ── Vitrine: renderizar card ───────────────────────────────
+  const grid = document.getElementById('productGrid');
+  const loading = document.getElementById('loading');
+  const countEl = document.getElementById('count');
+
+  function renderCard(product) {
+    const isSold = product.status === 'esgotado';
+    const img = product.images && product.images[0] ? product.images[0] : '';
+
+    const card = document.createElement('div');
+    card.className = 'card';
+    card.innerHTML = `
+      <div class="card-glow"></div>
+      <div class="card-img-wrap">
+        ${!isSold ? '<div class="badge badge-new">New</div>' : ''}
+        ${isSold ? '<div class="badge badge-sold">Esgotado</div>' : ''}
+        ${img ? `<img class="card-img" src="${img}" alt="${product.name}" />` : ''}
+      </div>
+      <div class="card-body">
+        <div class="card-type">${product.name}</div>
+        <div class="card-name">${product.style}</div>
+        <div class="card-style">${product.sku}</div>
+        <div class="card-footer">
+          <div class="card-price ${isSold ? 'sold' : ''}">${isSold ? 'Esgotado' : formatPrice(product.price)}</div>
+          <button class="btn-ver" ${isSold ? 'disabled' : ''}>Ver produto →</button>
+        </div>
+      </div>
+    `;
+
+    if (!isSold) {
+      card.querySelector('.btn-ver').addEventListener('click', (e) => {
+        e.stopPropagation();
+        openDetail(product);
+      });
+    }
+
+    grid.appendChild(card);
+  }
+
+  async function loadProducts() {
+    try {
+      const res = await fetch('/products');
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const json = await res.json();
+      const products = json.data;
+      loading.style.display = 'none';
+      countEl.textContent = products.length;
+      products.forEach(renderCard);
+    } catch (err) {
+      loading.textContent = `Erro ao carregar produtos: ${err.message}`;
+      loading.style.color = '#ff5050';
+    }
+  }
+
+  loadProducts();
+  updateCartBadge();
+</script>
+</body>
+</html>
