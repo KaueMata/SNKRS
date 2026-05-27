@@ -1,83 +1,55 @@
-const fs = require('fs');
-const path = require('path');
-
-// Caminho para o arquivo JSON que simula o banco de dados
-const DB_PATH = path.join(__dirname, '../../products.json');
-
-/**
- * Lê todos os produtos do arquivo JSON.
- * @returns {Array} Lista de produtos.
- */
-const readProducts = () => {
-  try {
-    if (!fs.existsSync(DB_PATH)) {
-      // Se o arquivo não existe, retorna lista vazia e cria o arquivo
-      fs.writeFileSync(DB_PATH, JSON.stringify([], null, 2), 'utf-8');
-      return [];
-    }
-    const data = fs.readFileSync(DB_PATH, 'utf-8');
-    return JSON.parse(data);
-  } catch (error) {
-    console.error('Erro ao ler products.json:', error.message);
-    throw new Error('Não foi possível acessar o banco de dados local.');
-  }
-};
-
-/**
- * Salva a lista completa de produtos no arquivo JSON.
- * @param {Array} products - Array de produtos a ser salvo.
- */
-const writeProducts = (products) => {
-  try {
-    fs.writeFileSync(DB_PATH, JSON.stringify(products, null, 2), 'utf-8');
-  } catch (error) {
-    console.error('Erro ao escrever em products.json:', error.message);
-    throw new Error('Não foi possível salvar no banco de dados local.');
-  }
-};
+const Product = require('./ProductSequelize');
 
 /**
  * Retorna todos os produtos.
- * @returns {Array}
+ * @returns {Promise<Array>}
  */
-const findAll = () => {
-  return readProducts();
+const findAll = async () => {
+  try {
+    return await Product.findAll({
+      raw: true,
+      order: [['id', 'ASC']],
+    });
+  } catch (error) {
+    throw new Error(`Erro ao buscar produtos: ${error.message}`);
+  }
 };
 
 /**
  * Busca um produto pelo ID.
- * @param {string} id
- * @returns {Object|null} Produto encontrado ou null.
+ * @param {number|string} id
+ * @returns {Promise<Object|null>} Produto encontrado ou null.
  */
-const findById = (id) => {
-  const products = readProducts();
-  return products.find((p) => p.id === id) || null;
+const findById = async (id) => {
+  try {
+    const product = await Product.findByPk(id);
+    return product ? product.get({ plain: true }) : null;
+  } catch (error) {
+    throw new Error(`Erro ao buscar produto: ${error.message}`);
+  }
 };
 
 /**
- * Cria um novo produto e adiciona ao arquivo JSON.
- * Gera um ID único baseado em timestamp.
+ * Cria um novo produto no banco.
  * @param {Object} productData - Dados do novo produto.
- * @returns {Object} Produto criado.
+ * @returns {Promise<Object>} Produto criado.
  */
-const create = (productData) => {
-  const products = readProducts();
+const create = async (productData) => {
+  try {
+    const newProduct = await Product.create({
+      name: productData.name,
+      style: productData.style,
+      price: parseFloat(productData.price),
+      description: productData.description,
+      sku: productData.sku,
+      status: productData.status || 'disponivel',
+      images: productData.images || [],
+    });
 
-  const newProduct = {
-    id: Date.now().toString(), // ID temporário via timestamp
-    name: productData.name,
-    style: productData.style,
-    price: parseFloat(productData.price),
-    description: productData.description,
-    sku: productData.sku,
-    status: productData.status || 'disponivel',
-    images: productData.images || [],
-  };
-
-  products.push(newProduct);
-  writeProducts(products);
-
-  return newProduct;
+    return newProduct.get({ plain: true });
+  } catch (error) {
+    throw new Error(`Erro ao criar produto: ${error.message}`);
+  }
 };
 
 module.exports = {

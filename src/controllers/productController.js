@@ -4,18 +4,22 @@ const Product = require('../models/product');
  * GET /products
  * Lista todos os produtos disponíveis na vitrine.
  */
-const getAllProducts = (req, res) => {
+const getAllProducts = async (req, res) => {
   try {
-    const products = Product.findAll();
+    console.log('GET /products - iniciando...');
+    const products = await Product.findAll();
+    console.log(`GET /products - ${products.length} produtos encontrados`);
     return res.status(200).json({
       success: true,
       count: products.length,
       data: products,
     });
   } catch (error) {
+    console.error('GET /products - Erro:', error.message);
+    console.error(error.stack);
     return res.status(500).json({
       success: false,
-      message: error.message,
+      message: `Erro ao buscar produtos: ${error.message}`,
     });
   }
 };
@@ -24,10 +28,10 @@ const getAllProducts = (req, res) => {
  * GET /products/:id
  * Busca um produto específico pelo ID (página de detalhes).
  */
-const getProductById = (req, res) => {
+const getProductById = async (req, res) => {
   try {
     const { id } = req.params;
-    const product = Product.findById(id);
+    const product = await Product.findById(id);
 
     if (!product) {
       return res.status(404).json({
@@ -41,6 +45,7 @@ const getProductById = (req, res) => {
       data: product,
     });
   } catch (error) {
+    console.error('GET /products/:id - Erro:', error.message);
     return res.status(500).json({
       success: false,
       message: error.message,
@@ -53,7 +58,7 @@ const getProductById = (req, res) => {
  * Cadastra um novo produto (área do administrador).
  * Espera no body: name, style, price, description, sku, status, images (array)
  */
-const createProduct = (req, res) => {
+const createProduct = async (req, res) => {
   try {
     const { name, style, price, description, sku, status, images } = req.body;
 
@@ -65,7 +70,7 @@ const createProduct = (req, res) => {
       });
     }
 
-    const newProduct = Product.create({
+    const newProduct = await Product.create({
       name,
       style,
       price,
@@ -81,6 +86,7 @@ const createProduct = (req, res) => {
       data: newProduct,
     });
   } catch (error) {
+    console.error('POST /products - Erro:', error.message);
     return res.status(500).json({
       success: false,
       message: error.message,
