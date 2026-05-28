@@ -94,8 +94,99 @@ const createProduct = async (req, res) => {
   }
 };
 
+/**
+ * POST /products/upload
+ * Cadastra um novo produto com upload de imagem.
+ * Usa FormData com arquivo
+ */
+const createProductWithUpload = async (req, res) => {
+  try {
+    const { name, style, price, description, sku } = req.body;
+
+    // Validação dos campos obrigatórios
+    if (!name || !style || !price || !sku) {
+      return res.status(400).json({
+        success: false,
+        message: 'Campos obrigatórios ausentes: name, style, price e sku são necessários.',
+      });
+    }
+
+    // Validar se houve upload de arquivo
+    if (!req.file) {
+      return res.status(400).json({
+        success: false,
+        message: 'Arquivo de imagem não foi enviado.',
+      });
+    }
+
+    // Caminho da imagem relativo ao servidor
+    const imagePath = `/images/${req.file.filename}`;
+
+    const newProduct = await Product.create({
+      name,
+      style,
+      price: parseFloat(price),
+      description,
+      sku,
+      status: 'disponivel',
+      images: [imagePath],
+    });
+
+    return res.status(201).json({
+      success: true,
+      message: 'Produto cadastrado com sucesso!',
+      data: newProduct,
+    });
+  } catch (error) {
+    console.error('POST /products/upload - Erro:', error.message);
+    return res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+/**
+ * DELETE /products/:id
+ * Remove um produto do catálogo (apenas admin)
+ */
+const deleteProduct = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const product = await Product.findById(id);
+
+    if (!product) {
+      return res.status(404).json({
+        success: false,
+        message: `Produto com id "${id}" não encontrado.`,
+      });
+    }
+
+    // Deletar do banco
+    const ProductModel = require('../models/ProductSequelize');
+    await ProductModel.destroy({
+      where: { id }
+    });
+
+    return res.status(200).json({
+      success: true,
+      message: 'Produto removido com sucesso!',
+      data: product,
+    });
+  } catch (error) {
+    console.error('DELETE /products/:id - Erro:', error.message);
+    return res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
 module.exports = {
   getAllProducts,
   getProductById,
   createProduct,
+  createProductWithUpload,
+  deleteProduct,
 };
