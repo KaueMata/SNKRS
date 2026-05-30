@@ -1,4 +1,4 @@
-<img width="1660" height="856" alt="image" src="https://github.com/user-attachments/assets/f1f7330d-0f5a-4b52-92b7-733a7f235582" /># 👟 SNKRS
+# 👟 SNKRS
 
 Sistema web REST desenvolvido para gerenciamento e vendas de tênis (sneakers), permitindo aos clientes navegar e comprar produtos, enquanto administradores gerenciam catálogo, preços, imagens e disponibilidade.
 
