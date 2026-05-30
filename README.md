@@ -10,7 +10,7 @@ Projeto acadêmico do curso de Análise e Desenvolvimento de Sistemas (ADS).
 
 | Nome      |  RA      |
 |---------- |----------|
-| Kaue Mata | 2402316  |
+| Tainara Santana Santos | 2402316  |
 
 ---
 
