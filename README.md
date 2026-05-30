@@ -8,9 +8,9 @@ Projeto acadêmico do curso de Análise e Desenvolvimento de Sistemas (ADS).
 
 ## 👥 Integrantes
 
-| Nome | RA | Cargo |
-|------|----|----|
-| Kaue Mata | 2402317 | Desenvolvedor Fullstack |
+| Nome      |  RA      |
+|---------- |----------|
+| Kaue Mata | 2402316  |
 
 ---
 
