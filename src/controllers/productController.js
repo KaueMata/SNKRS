@@ -96,14 +96,12 @@ const createProduct = async (req, res) => {
 
 /**
  * POST /products/upload
- * Cadastra um novo produto com upload de imagem.
- * Usa FormData com arquivo
+ * Cadastra um novo produto com upload de imagem (área do administrador).
  */
 const createProductWithUpload = async (req, res) => {
   try {
-    const { name, style, price, description, sku } = req.body;
+    const { name, style, price, description, sku, status } = req.body;
 
-    // Validação dos campos obrigatórios
     if (!name || !style || !price || !sku) {
       return res.status(400).json({
         success: false,
@@ -111,25 +109,16 @@ const createProductWithUpload = async (req, res) => {
       });
     }
 
-    // Validar se houve upload de arquivo
-    if (!req.file) {
-      return res.status(400).json({
-        success: false,
-        message: 'Arquivo de imagem não foi enviado.',
-      });
-    }
-
-    // Caminho da imagem relativo ao servidor
-    const imagePath = `/images/${req.file.filename}`;
+    const images = req.file ? [{ path: req.file.filename }] : [];
 
     const newProduct = await Product.create({
       name,
       style,
-      price: parseFloat(price),
+      price,
       description,
       sku,
-      status: 'disponivel',
-      images: [imagePath],
+      status,
+      images,
     });
 
     return res.status(201).json({
@@ -148,14 +137,13 @@ const createProductWithUpload = async (req, res) => {
 
 /**
  * DELETE /products/:id
- * Remove um produto do catálogo (apenas admin)
+ * Remove um produto do catálogo.
  */
 const deleteProduct = async (req, res) => {
   try {
     const { id } = req.params;
 
     const product = await Product.findById(id);
-
     if (!product) {
       return res.status(404).json({
         success: false,
@@ -163,15 +151,11 @@ const deleteProduct = async (req, res) => {
       });
     }
 
-    // Deletar do banco
-    const ProductModel = require('../models/ProductSequelize');
-    await ProductModel.destroy({
-      where: { id }
-    });
+    await Product.delete(id);
 
     return res.status(200).json({
       success: true,
-      message: 'Produto removido com sucesso!',
+      message: 'Produto deletado com sucesso!',
       data: product,
     });
   } catch (error) {
