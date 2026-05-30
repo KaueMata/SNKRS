@@ -1,11 +1,15 @@
-# 👟 SNKRS
+<img width="1660" height="856" alt="image" src="https://github.com/user-attachments/assets/f1f7330d-0f5a-4b52-92b7-733a7f235582" /># 👟 SNKRS
 
 Sistema web REST desenvolvido para gerenciamento e vendas de tênis (sneakers), permitindo aos clientes navegar e comprar produtos, enquanto administradores gerenciam catálogo, preços, imagens e disponibilidade.
 
 Projeto acadêmico do curso de Análise e Desenvolvimento de Sistemas (ADS).
 
 ---
+O acompanhamento das tarefas, sprints e progresso do projeto Foram feitos através do https://github.com/users/KaueMata/projects/2/views/1?layout_template=board
+<img width="1660" height="856" alt="image" src="https://github.com/user-attachments/assets/3609a09c-5d26-4967-b268-904545c88009" />
 
+
+---
 ## 👥 Integrantes
 
 | Nome      |  RA      |
