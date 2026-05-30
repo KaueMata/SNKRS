@@ -9,12 +9,7 @@ O acompanhamento das tarefas, sprints e progresso do projeto Foram feitos atravÃ
 <img width="1660" height="856" alt="image" src="https://github.com/user-attachments/assets/3609a09c-5d26-4967-b268-904545c88009" />
 
 
----
-## ğŸ‘¥ Integrantes
 
-| Nome      |  RA      |
-|---------- |----------|
-| Tainara Santana Santos | 2402316  |
 
 ---
 
