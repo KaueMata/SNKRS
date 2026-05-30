@@ -122,6 +122,4 @@ Este projeto está licenciado sob a Licença ISC.
 
 <div align="center">
 
-**Feito com ❤️ por Kaue Mata**
-
 </div>
